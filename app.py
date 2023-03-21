@@ -16,11 +16,12 @@ selected = st.sidebar.selectbox('Choose a K Number:', nums)
 queried = event.query(f'k_number == "{selected}"')
 queried.reset_index(inplace=True, drop=True)
 #queried['mdr_report_key'] = queried['mdr_report_key'].astype(str)
-
+report_keys = list(queried['mdr_report_key'])
+report_keys.insert(0, '')
+selected_key = st.sidebar.selectbox('Choose a Report Key Number:', report_keys)
 if selected != '':
-    report_keys = list(queried['mdr_report_key'])
-    report_keys.insert(0, '')
-    selected_key = st.sidebar.selectbox('Choose a Report Key Number:', report_keys)
+
+    #selected_key = st.sidebar.selectbox('Choose a Report Key Number:', report_keys)
 
 #---------------------Data preparations---------------------
 
