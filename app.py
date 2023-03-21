@@ -147,7 +147,7 @@ if selected != '':
             df_monthly_counts["month"] = pd.to_datetime(df_monthly_counts["date_of_event"], format="%m").dt.month_name().str.slice(stop=3)
             fig2 = go.Figure()
             fig2.add_trace(go.Bar(x=df_monthly_counts["month"], y=df_monthly_counts["counts"]))
-            fig2.update_layout(title='Seasonality', xaxis={'tickmode': 'linear', 'dtick': 1})
+            fig2.update_layout(title='Distribution of Events per Month', xaxis={'tickmode': 'linear', 'dtick': 1})
             st.plotly_chart(fig2)
 
         with col9:
