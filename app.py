@@ -62,8 +62,8 @@ if selected != '':
 
 
 
-    date_of_event = queried['date_of_event']
-    device_manifacturing = queried['device_date_of_manufacturer']
+    date_of_event = queried['date_of_event'][0].date()
+    device_manifacturing = queried['device_date_of_manufacturer'][0]
     product_code = queried['product_code'][0]
     days_from_release_to_failure = queried['days_from_release_to_failure']
     product_problems = queried['product_problems']
@@ -89,58 +89,81 @@ if selected != '':
         st.write(res2[1])
         st.write(res2[2])
 
-    st.subheader("General information")
-    col4, col5, col6 = st.columns((5,1,5))
-
-
-    with col4:
-        
-        df_monthly_counts = queried.groupby(queried["date_of_event"].dt.month).size().reset_index(name="counts")
-        df_monthly_counts["month"] = pd.to_datetime(df_monthly_counts["date_of_event"], format="%m").dt.month_name().str.slice(stop=3)
-        fig2 = go.Figure()
-        fig2.add_trace(go.Bar(x=df_monthly_counts["month"], y=df_monthly_counts["counts"]))
-        fig2.update_layout(title='Seasonality', xaxis={'tickmode': 'linear', 'dtick': 1})
-        st.plotly_chart(fig2)
-
-    with col6:
-
-        grouped_data = queried.groupby('event_type')['event_type'].count()
-
-        # Create a bar chart
-        fig = go.Figure(data=[go.Bar(x=grouped_data.index, y=grouped_data.values)])
-
-        # Set the chart title and axes labels
-        fig.update_layout(title='Distribution of Event Types', xaxis_title='Event Type', yaxis_title='Count')
-        st.plotly_chart(fig)
-
+    
+    
 
     if selected_key:
-        st.subheader("Report Key: "+str(selected_key))
-        col7, col8, col9 = st.columns((5,1,5))
-
         queried_key = queried.query(f'mdr_report_key == {selected_key}')
         queried_key.reset_index(inplace=True, drop=True)
-        with col7:
+        days = queried_key['days_from_release_to_failure'][0]
+        st.markdown(' ', unsafe_allow_html=True,)
+        st.subheader("Report Key: "+str(selected_key))
+
+        col1a, col2a, col3a = st.columns((5,1,5))
+        with col1a:
+            st.markdown(f'<p style=""><b>Device date of Event: </b>{date_of_event}</p>', unsafe_allow_html=True,)
+            st.markdown(f'<p style=""><b>Device date of Manufacture: </b>{device_manifacturing}</p>', unsafe_allow_html=True,)
+
+        st.markdown(' ', unsafe_allow_html=True,)
+        st.markdown(' ', unsafe_allow_html=True,)
+
+        st.subheader("Age of the Device at Event: "+str(days)+" days")
+        col4, col5, col6 = st.columns((5,1,5))
+
+
+        with col4:
             fig3 = px.histogram(queried, x="days_from_release_to_failure")
 
             # add a vertical line to highlight the chosen mdr_report_key
 
             fig3.add_vline(x=queried.loc[queried["mdr_report_key"] == selected_key, "days_from_release_to_failure"].iloc[0], 
                         line_dash="dash", line_color="red")
-            fig3.update_layout(title='Distribution Days to failure', xaxis_title='Days To Failure', yaxis_title='Count')
+            fig3.update_layout(title='Distribution of Device Age at Event', xaxis_title='Age of Device (Days)', yaxis_title='Count')
             st.plotly_chart(fig3)
 
+        with col6:
+                
+                #st.markdown(f'<p style=""><b>Days to Failure: </b>{days}</p>', unsafe_allow_html=True,)
+                #st.markdown(' ', unsafe_allow_html=True,)
+                with st.expander("MDR Text"):
+                    st.write(queried_key['mdr_text_1'][0])
+                st.markdown(' ', unsafe_allow_html=True,)
+                st.markdown(' ', unsafe_allow_html=True,)
+                st.markdown(' ', unsafe_allow_html=True,)
+                st.markdown(' ', unsafe_allow_html=True,)
+                with st.expander("Manufacturer Text"):
+                    st.write(queried_key['manufacturer_narrative'][0])
+
+
+
+    
+    
+    if selected_key:
+        st.subheader("General information")
+        col7, col8, col9 = st.columns((5,1,5))
+        with col7:
+            
+            df_monthly_counts = queried.groupby(queried["date_of_event"].dt.month).size().reset_index(name="counts")
+            df_monthly_counts["month"] = pd.to_datetime(df_monthly_counts["date_of_event"], format="%m").dt.month_name().str.slice(stop=3)
+            fig2 = go.Figure()
+            fig2.add_trace(go.Bar(x=df_monthly_counts["month"], y=df_monthly_counts["counts"]))
+            fig2.update_layout(title='Seasonality', xaxis={'tickmode': 'linear', 'dtick': 1})
+            st.plotly_chart(fig2)
+
         with col9:
-            days = queried_key['days_from_release_to_failure'][0]
-            st.markdown(f'<p style=""><b>Days to Failure: </b>{days}</p>', unsafe_allow_html=True,)
-            st.markdown(' ', unsafe_allow_html=True,)
-            with st.expander("MDR Text"):
-                st.write(queried_key['mdr_text_1'][0])
-            st.markdown(' ', unsafe_allow_html=True,)
-            st.markdown(' ', unsafe_allow_html=True,)
-            st.markdown(' ', unsafe_allow_html=True,)
-            st.markdown(' ', unsafe_allow_html=True,)
-            with st.expander("Manufacturer Text"):
-                st.write(queried_key['manufacturer_narrative'][0])
+
+            grouped_data = queried.groupby('event_type')['event_type'].count()
+
+            # Create a bar chart
+            fig = go.Figure(data=[go.Bar(x=grouped_data.index, y=grouped_data.values)])
+
+            # Set the chart title and axes labels
+            fig.update_layout(title='Distribution of Event Types', xaxis_title='Event Type', yaxis_title='Count')
+            st.plotly_chart(fig)
+
+
+    
+
+        
             
 
