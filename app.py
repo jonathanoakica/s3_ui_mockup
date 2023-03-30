@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 
 st.set_page_config(page_title="UI Mockup - K Numbers", layout='wide')
 
-event = pd.read_csv('event_k_numbers_sample.csv')
+event = pd.read_csv('event_k_sample_freq.csv')
 
 st.sidebar.title('UI Mockup - K Numbers')
 
@@ -72,7 +72,7 @@ if selected != '':
     brand = queried['brand'][0].split(',')[0]
     manufacturer_name = queried['manufacturer_name'][0]
     generic_name = queried['generic_name'][0]
-
+    frequency = queried['frequency'][0]
 
 
 
@@ -118,6 +118,8 @@ if selected != '':
         st.markdown(' ', unsafe_allow_html=True,)
 
         st.subheader("Age of the Device at Event: "+str(days)+" days")
+        st.markdown(f'<p style="font-size: 26px;"><b>Device Failure Percentage:</b> <span style="color: red;"><b>{frequency}<b></span></p>', unsafe_allow_html=True)
+
         col4, col5, col6 = st.columns((5,1,5))
 
 
