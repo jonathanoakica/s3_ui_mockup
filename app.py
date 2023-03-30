@@ -1,4 +1,6 @@
 import streamlit as st
+import numpy as np
+import statsmodels.api as sm
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -104,6 +106,14 @@ if selected != '':
             st.markdown(f'<p style=""><b>Device date of Event: </b>{date_of_event}</p>', unsafe_allow_html=True,)
             st.markdown(f'<p style=""><b>Device date of Manufacture: </b>{device_manifacturing}</p>', unsafe_allow_html=True,)
 
+        with col3a:
+
+            with st.expander("MDR Text"):
+                st.write(queried_key['mdr_text_1'][0])
+            with st.expander("Manufacturer Text"):
+                st.write(queried_key['manufacturer_narrative'][0])
+
+
         st.markdown(' ', unsafe_allow_html=True,)
         st.markdown(' ', unsafe_allow_html=True,)
 
@@ -123,19 +133,46 @@ if selected != '':
 
         with col6:
                 
-                #st.markdown(f'<p style=""><b>Days to Failure: </b>{days}</p>', unsafe_allow_html=True,)
-                #st.markdown(' ', unsafe_allow_html=True,)
-                with st.expander("MDR Text"):
-                    st.write(queried_key['mdr_text_1'][0])
-                st.markdown(' ', unsafe_allow_html=True,)
-                st.markdown(' ', unsafe_allow_html=True,)
-                st.markdown(' ', unsafe_allow_html=True,)
-                st.markdown(' ', unsafe_allow_html=True,)
-                with st.expander("Manufacturer Text"):
-                    st.write(queried_key['manufacturer_narrative'][0])
+            ecdf = sm.distributions.ECDF(queried['days_from_release_to_failure'])
 
+            # calculate the percentiles
+            p0 = queried['days_from_release_to_failure'].min()
+            p100 = queried['days_from_release_to_failure'].max()
+            selected_device_days = queried.loc[queried["mdr_report_key"] == selected_key, "days_from_release_to_failure"].iloc[0]
+            selected_percentile = ecdf(selected_device_days) * 100
 
+            # create the line plot
+            fig4 = go.Figure()
 
+            fig4.add_trace(go.Scatter(
+                x=[p0, selected_device_days, p100],
+                y=[0, selected_percentile, 100],
+                mode="lines",
+                line=dict(color="blue", width=3),
+                name="Selected Device Percentile"
+            ))
+
+            fig4.add_trace(go.Scatter(
+                x=[p0, p100],
+                y=[0, 100],
+                mode="lines",
+                line=dict(color="gray", width=1),
+                fill="tonexty",
+                fillcolor="lightgray",
+                name="0th to 100th Percentile"
+            ))
+
+            fig4.update_layout(title='Percentile of Selected Device', xaxis_title='Age of Device (Days)', yaxis_title='Percentile',
+                            xaxis=dict(range=[p0, p100]), yaxis=dict(range=[0, 100]))
+
+            # add vertical line to highlight the selected device
+            fig4.add_vline(x=selected_device_days, 
+               line_dash="dash", 
+               line_color="blue", 
+               annotation_text=f"{selected_percentile:.2f}th percentile", 
+               annotation_font=dict(size=14, color='red'))
+
+            st.plotly_chart(fig4)
     
     
     if selected_key:
@@ -160,6 +197,8 @@ if selected != '':
             # Set the chart title and axes labels
             fig.update_layout(title='Distribution of Event Types', xaxis_title='Event Type', yaxis_title='Count')
             st.plotly_chart(fig)
+
+
 
 
     
