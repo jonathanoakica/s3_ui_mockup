@@ -7,26 +7,30 @@ import plotly.graph_objects as go
 
 st.set_page_config(page_title="UI Mockup - K Numbers", layout='wide')
 
-event = pd.read_csv('event_k_sample_freq.csv')
+event = pd.read_csv('event_with_mock.csv')
 
 st.sidebar.title('UI Mockup - K Numbers')
 
-nums = list(event['k_number'])[:1000]
+nums = list(event['udi_number'].unique())
 nums.insert(0, '')
+tresh = [i for i in range (5,100,5)]
+tresh.insert(0, '')
+selected = st.sidebar.selectbox('UDI Number:', nums)
+treshold = st.sidebar.selectbox('Define a Threshold:', tresh)
 
-selected = st.sidebar.selectbox('Choose a K Number:', nums)
-queried = event.query(f'k_number == "{selected}"')
-queried.reset_index(inplace=True, drop=True)
+
+
+#queried.reset_index(inplace=True, drop=True)
 #queried['mdr_report_key'] = queried['mdr_report_key'].astype(str)
-report_keys = list(queried['mdr_report_key'])
-report_keys.insert(0, '')
-selected_key = st.sidebar.selectbox('Choose a Report Key Number:', report_keys)
+
+
 if selected != '':
 
     #selected_key = st.sidebar.selectbox('Choose a Report Key Number:', report_keys)
 
 #---------------------Data preparations---------------------
-
+    queried = event.query(f'udi_number == {selected}')
+    queried.reset_index(drop=True, inplace=True)
     queried["date_of_event"] = pd.to_datetime(queried["date_of_event"])
     gbc = queried.groupby([queried['date_of_event'].dt.month])['date_of_event'].count()
 
@@ -61,22 +65,23 @@ if selected != '':
         top = i+': '+str(res[i])
         res2.append(top)
 
-
-
-
     date_of_event = queried['date_of_event'][0].date()
     device_manifacturing = queried['device_date_of_manufacturer'][0]
     product_code = queried['product_code'][0]
-    days_from_release_to_failure = queried['days_from_release_to_failure']
-    product_problems = queried['product_problems']
+    days_from_release_to_failure = queried['days_from_release_to_failure'][0]
+    days_from_implant_to_failure = queried['days_from_implant_to_failure'][0]
+    date_of_implant = queried['date_of_implant'][0]
     brand = queried['brand'][0].split(',')[0]
     manufacturer_name = queried['manufacturer_name'][0]
     generic_name = queried['generic_name'][0]
-    frequency = queried['frequency'][0]
-
-
-
-    st.header("K Number: "+selected)
+    in_use = queried.in_use[0]
+    failed = queried.failed[0]
+    in_use_f = '{:,}'.format(in_use)
+    failed_f = '{:,}'.format(failed)
+    freq = (failed/in_use) * 100
+    frequency = '%.0f%%' % (freq)
+    #st.dataframe(queried)
+    #st.header("K Number: "+selected)
     col1, col2, col3 = st.columns((5,1,5))
 
     with col1:
@@ -84,121 +89,89 @@ if selected != '':
         st.markdown(f'<p style=""><b>Manufacturer: </b>{manufacturer_name}</p>', unsafe_allow_html=True,)
         st.markdown(f'<p style=""><b>Generic Name: </b>{generic_name}</p>', unsafe_allow_html=True,)
         st.markdown(f'<p style=""><b>Product Code: </b>{product_code}</p>', unsafe_allow_html=True,)
+        st.markdown(f'<p style=""><b>Products In_use (Mock): </b>{in_use_f}</p>', unsafe_allow_html=True,)
+        st.markdown(f'<p style=""><b>Products Failed: </b>{failed_f}</p>', unsafe_allow_html=True,)
 
     with col3:
         st.markdown(f'<p style=""><b>Common Problems: </b></p>', unsafe_allow_html=True,)
-        st.write(res2[0])
-        st.write(res2[1])
-        st.write(res2[2])
+        for i in range(len(res)):
+            st.write(res2[i])
+        #st.write(res2[0])
+        #st.write(res2[1])
+        #st.write(res2[2])
+        #st.write(res2[4])
+        #st.write(res2[5])
 
     
-    
+    #st.markdown(' ', unsafe_allow_html=True,)
+    st.subheader("Submission Number: "+str(queried.submission_number[0]))
+    days = queried['days_from_release_to_failure'][0]
+    col1a, col2a, col3a = st.columns((5,1,5))
+    with col1a:
+        st.markdown(f'<p ><b>Age of Device at Event From First Use (Mock):</b> <span style="color: blue;"><b>{days_from_implant_to_failure}<b></span></p>', unsafe_allow_html=True)
+        st.markdown(f'<p><b>Age of Device at Event From Manufacture:</b> <span style="color: blue;"><b>{days}<b></span></p>', unsafe_allow_html=True)
+        if treshold != '':
+                if freq > treshold:
+                    st.markdown(f'<p style="font-size: 26px;"><b>Device Failure Percentage:</b> <span style="color: red;"><b>{frequency}<b></span></p>', unsafe_allow_html=True)
+                else:
+                    st.markdown(f'<p><b>Device Failure Percentage:</b> <span style="color: blue;"><b>{frequency}<b></span></p>', unsafe_allow_html=True)
+    with col3a:
+       
 
-    if selected_key:
-        queried_key = queried.query(f'mdr_report_key == {selected_key}')
-        queried_key.reset_index(inplace=True, drop=True)
-        days = queried_key['days_from_release_to_failure'][0]
-        st.markdown(' ', unsafe_allow_html=True,)
-        st.subheader("Report Key: "+str(selected_key))
+        st.markdown(f'<p style=""><b>Device date of Manufacture: </b>{device_manifacturing}</p>', unsafe_allow_html=True,)
+        st.markdown(f'<p style=""><b>Device date of First Use: </b>{date_of_implant}</p>', unsafe_allow_html=True,)
+        st.markdown(f'<p style=""><b>Device date of Event: </b>{date_of_event}</p>', unsafe_allow_html=True,)
+    st.markdown(' ', unsafe_allow_html=True,)
+    st.markdown(' ', unsafe_allow_html=True,)
 
-        col1a, col2a, col3a = st.columns((5,1,5))
-        with col1a:
-            st.markdown(f'<p style=""><b>Device date of Event: </b>{date_of_event}</p>', unsafe_allow_html=True,)
-            st.markdown(f'<p style=""><b>Device date of Manufacture: </b>{device_manifacturing}</p>', unsafe_allow_html=True,)
-
-        with col3a:
-
-            with st.expander("MDR Text"):
-                st.write(queried_key['mdr_text_1'][0])
-            with st.expander("Manufacturer Text"):
-                st.write(queried_key['manufacturer_narrative'][0])
-
-
-        st.markdown(' ', unsafe_allow_html=True,)
-        st.markdown(' ', unsafe_allow_html=True,)
-
-        st.subheader("Age of the Device at Event: "+str(days)+" days")
-        st.markdown(f'<p style="font-size: 26px;"><b>Device Failure Percentage:</b> <span style="color: red;"><b>{frequency}<b></span></p>', unsafe_allow_html=True)
-
-        col4, col5, col6 = st.columns((5,1,5))
+    #st.subheader("Age of the Device at Event: "+str(days)+" days")
+   
+    col4, col5, col6 = st.columns((5,1,5))
 
 
-        with col4:
-            fig3 = px.histogram(queried, x="days_from_release_to_failure")
+    with col4:
+        fig3 = px.histogram(queried, x="days_from_release_to_failure")
 
-            # add a vertical line to highlight the chosen mdr_report_key
+        # add a vertical line to highlight the chosen mdr_report_key
 
-            fig3.add_vline(x=queried.loc[queried["mdr_report_key"] == selected_key, "days_from_release_to_failure"].iloc[0], 
-                        line_dash="dash", line_color="red")
-            fig3.update_layout(title='Distribution of Device Age at Event', xaxis_title='Age of Device (Days)', yaxis_title='Count')
-            st.plotly_chart(fig3)
+        fig3.add_vline(x=queried.loc[queried["days_from_release_to_failure"] == days, "days_from_release_to_failure"].iloc[0], 
+                    line_dash="dash", line_color="red")
+        fig3.update_layout(title='Distribution of Device Age at Event From Manufacure date', xaxis_title='Age of Device (Days)', yaxis_title='Count')
+        st.plotly_chart(fig3)
 
-        with col6:
-                
-            ecdf = sm.distributions.ECDF(queried['days_from_release_to_failure'])
+    with col6:
+        fig4 = px.histogram(queried, x="days_from_implant_to_failure")
 
-            # calculate the percentiles
-            p0 = queried['days_from_release_to_failure'].min()
-            p100 = queried['days_from_release_to_failure'].max()
-            selected_device_days = queried.loc[queried["mdr_report_key"] == selected_key, "days_from_release_to_failure"].iloc[0]
-            selected_percentile = ecdf(selected_device_days) * 100
+        # add a vertical line to highlight the chosen mdr_report_key
 
-            # create the line plot
-            fig4 = go.Figure()
+        fig4.add_vline(x=queried.loc[queried["days_from_implant_to_failure"] == days, "days_from_implant_to_failure"].iloc[0], 
+                    line_dash="dash", line_color="red")
+        fig4.update_layout(title='Distribution of Device Age at Event From First Use date', xaxis_title='Age of Device (Days)', yaxis_title='Count')
+        st.plotly_chart(fig4)           
+        
 
-            fig4.add_trace(go.Scatter(
-                x=[p0, selected_device_days, p100],
-                y=[0, selected_percentile, 100],
-                mode="lines",
-                line=dict(color="blue", width=3),
-                name="Selected Device Percentile"
-            ))
 
-            fig4.add_trace(go.Scatter(
-                x=[p0, p100],
-                y=[0, 100],
-                mode="lines",
-                line=dict(color="gray", width=1),
-                fill="tonexty",
-                fillcolor="lightgray",
-                name="0th to 100th Percentile"
-            ))
+    st.subheader("General information")
+    col7, col8, col9 = st.columns((5,1,5))
+    with col7:
+        
+        df_monthly_counts = queried.groupby(queried["date_of_event"].dt.month).size().reset_index(name="counts")
+        df_monthly_counts["month"] = pd.to_datetime(df_monthly_counts["date_of_event"], format="%m").dt.month_name().str.slice(stop=3)
+        fig2 = go.Figure()
+        fig2.add_trace(go.Bar(x=df_monthly_counts["month"], y=df_monthly_counts["counts"]))
+        fig2.update_layout(title='Distribution of Events per Month', xaxis={'tickmode': 'linear', 'dtick': 1})
+        st.plotly_chart(fig2)
 
-            fig4.update_layout(title='Percentile of Selected Device', xaxis_title='Age of Device (Days)', yaxis_title='Percentile',
-                            xaxis=dict(range=[p0, p100]), yaxis=dict(range=[0, 100]))
+    with col9:
 
-            # add vertical line to highlight the selected device
-            fig4.add_vline(x=selected_device_days, 
-               line_dash="dash", 
-               line_color="blue", 
-               annotation_text=f"{selected_percentile:.2f}th percentile", 
-               annotation_font=dict(size=14, color='red'))
+        grouped_data = queried.groupby('event_type')['event_type'].count()
 
-            st.plotly_chart(fig4)
-    
-    
-    if selected_key:
-        st.subheader("General information")
-        col7, col8, col9 = st.columns((5,1,5))
-        with col7:
-            
-            df_monthly_counts = queried.groupby(queried["date_of_event"].dt.month).size().reset_index(name="counts")
-            df_monthly_counts["month"] = pd.to_datetime(df_monthly_counts["date_of_event"], format="%m").dt.month_name().str.slice(stop=3)
-            fig2 = go.Figure()
-            fig2.add_trace(go.Bar(x=df_monthly_counts["month"], y=df_monthly_counts["counts"]))
-            fig2.update_layout(title='Distribution of Events per Month', xaxis={'tickmode': 'linear', 'dtick': 1})
-            st.plotly_chart(fig2)
+        # Create a bar chart
+        fig = go.Figure(data=[go.Bar(x=grouped_data.index, y=grouped_data.values)])
 
-        with col9:
-
-            grouped_data = queried.groupby('event_type')['event_type'].count()
-
-            # Create a bar chart
-            fig = go.Figure(data=[go.Bar(x=grouped_data.index, y=grouped_data.values)])
-
-            # Set the chart title and axes labels
-            fig.update_layout(title='Distribution of Event Types', xaxis_title='Event Type', yaxis_title='Count')
-            st.plotly_chart(fig)
+        # Set the chart title and axes labels
+        fig.update_layout(title='Distribution of Event Types', xaxis_title='Event Type', yaxis_title='Count')
+        st.plotly_chart(fig)
 
 
 
