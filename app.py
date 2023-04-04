@@ -5,17 +5,17 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-st.set_page_config(page_title="UI Mockup - K Numbers", layout='wide')
+st.set_page_config(page_title="UI Mockup - DI Numbers", layout='wide')
 
 event = pd.read_csv('event_with_mock.csv')
 
-st.sidebar.title('UI Mockup - K Numbers')
+st.sidebar.title('UI Mockup - DI Numbers')
 
 nums = list(event['udi_number'].unique())
 nums.insert(0, '')
 tresh = [i for i in range (5,100,5)]
 tresh.insert(0, '')
-selected = st.sidebar.selectbox('UDI Number:', nums)
+selected = st.sidebar.selectbox('DI Number:', nums)
 treshold = st.sidebar.selectbox('Define a Threshold:', tresh)
 
 
