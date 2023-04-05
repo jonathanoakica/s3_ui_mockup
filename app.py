@@ -13,20 +13,14 @@ st.sidebar.title('UI Mockup - DI Numbers')
 
 nums = list(event['udi_number'].unique())
 nums.insert(0, '')
-tresh = [i for i in range (5,100,5)]
-tresh.insert(0, '')
+thresh = [i for i in range (5,100,5)]
+thresh.insert(0, '')
 selected = st.sidebar.selectbox('DI Number:', nums)
-treshold = st.sidebar.selectbox('Define a Threshold:', tresh)
+threshold = st.sidebar.selectbox('Define a Threshold:', thresh)
 
-
-
-#queried.reset_index(inplace=True, drop=True)
-#queried['mdr_report_key'] = queried['mdr_report_key'].astype(str)
 
 
 if selected != '':
-
-    #selected_key = st.sidebar.selectbox('Choose a Report Key Number:', report_keys)
 
 #---------------------Data preparations---------------------
     queried = event.query(f'udi_number == {selected}')
@@ -78,8 +72,10 @@ if selected != '':
     failed = queried.failed[0]
     in_use_f = '{:,}'.format(in_use)
     failed_f = '{:,}'.format(failed)
-    freq = (failed/in_use) * 100
+    freq = event['percentage'][0]
     frequency = '%.0f%%' % (freq)
+    submission_number = queried['submission_number'][0]
+
     #st.dataframe(queried)
     #st.header("K Number: "+selected)
     col1, col2, col3 = st.columns((5,1,5))
@@ -96,13 +92,7 @@ if selected != '':
         st.markdown(f'<p style=""><b>Common Problems: </b></p>', unsafe_allow_html=True,)
         for i in range(len(res)):
             st.write(res2[i])
-        #st.write(res2[0])
-        #st.write(res2[1])
-        #st.write(res2[2])
-        #st.write(res2[4])
-        #st.write(res2[5])
 
-    
     #st.markdown(' ', unsafe_allow_html=True,)
     st.subheader("Submission Number: "+str(queried.submission_number[0]))
     days = queried['days_from_release_to_failure'][0]
@@ -110,8 +100,8 @@ if selected != '':
     with col1a:
         st.markdown(f'<p ><b>Age of Device at Event From First Use (Mock):</b> <span style="color: blue;"><b>{days_from_implant_to_failure}<b></span></p>', unsafe_allow_html=True)
         st.markdown(f'<p><b>Age of Device at Event From Manufacture:</b> <span style="color: blue;"><b>{days}<b></span></p>', unsafe_allow_html=True)
-        if treshold != '':
-                if freq > treshold:
+        if threshold != '':
+                if freq > threshold:
                     st.markdown(f'<p style="font-size: 26px;"><b>Device Failure Percentage:</b> <span style="color: red;"><b>{frequency}<b></span></p>', unsafe_allow_html=True)
                 else:
                     st.markdown(f'<p><b>Device Failure Percentage:</b> <span style="color: blue;"><b>{frequency}<b></span></p>', unsafe_allow_html=True)
@@ -127,28 +117,51 @@ if selected != '':
     #st.subheader("Age of the Device at Event: "+str(days)+" days")
    
     col4, col5, col6 = st.columns((5,1,5))
-
+    
 
     with col4:
-        fig3 = px.histogram(queried, x="days_from_release_to_failure")
+        fig1 = px.histogram(queried, x="days_from_release_to_failure")
 
         # add a vertical line to highlight the chosen mdr_report_key
 
-        fig3.add_vline(x=queried.loc[queried["days_from_release_to_failure"] == days, "days_from_release_to_failure"].iloc[0], 
+        fig1.add_vline(x=queried["days_from_release_to_failure"][0], 
                     line_dash="dash", line_color="red")
-        fig3.update_layout(title='Distribution of Device Age at Event From Manufacure date', xaxis_title='Age of Device (Days)', yaxis_title='Count')
-        st.plotly_chart(fig3)
+        fig1.update_layout(title='Distribution of Device Age at Event From Manufacure date', xaxis_title='Age of Device (Days)', yaxis_title='Count')
+        st.plotly_chart(fig1)
+
+        if threshold != '':
+            queried_prod = event.query(f'product_code == "{product_code}"')
+            fig2 = px.histogram(queried_prod, x="days_from_release_to_failure")
+
+            # add a vertical line to highlight the chosen mdr_report_key
+
+            fig2.add_vline(x=days, 
+                        line_dash="dash", line_color="red")
+            fig2.update_layout(title='Comparisson with Devices with the same Product Code', xaxis_title='Age of Device (Days)', yaxis_title='Count')
+            st.plotly_chart(fig2)
+
 
     with col6:
-        fig4 = px.histogram(queried, x="days_from_implant_to_failure")
+        fig3 = px.histogram(queried, x="days_from_implant_to_failure")
 
         # add a vertical line to highlight the chosen mdr_report_key
 
-        fig4.add_vline(x=queried.loc[queried["days_from_implant_to_failure"] == days, "days_from_implant_to_failure"].iloc[0], 
+        fig3.add_vline(x=queried["days_from_implant_to_failure"][0], 
                     line_dash="dash", line_color="red")
-        fig4.update_layout(title='Distribution of Device Age at Event From First Use date', xaxis_title='Age of Device (Days)', yaxis_title='Count')
-        st.plotly_chart(fig4)           
+        fig3.update_layout(title='Distribution of Device Age at Event From First Use date', xaxis_title='Age of Device (Days)', yaxis_title='Count')
+        st.plotly_chart(fig3)           
         
+    # Create dataset for di_specific
+        if threshold != '':
+            queried_number = event.query(f'submission_number == "{submission_number}"')
+            fig4 = px.histogram(queried_number, x="days_from_release_to_failure")
+
+            # add a vertical line to highlight the chosen mdr_report_key
+
+            fig4.add_vline(x=days, 
+                        line_dash="dash", line_color="red")
+            fig4.update_layout(title='Comparisson with Devices with the same Submission Number', xaxis_title='Age of Device (Days)', yaxis_title='Count')
+            st.plotly_chart(fig4)
 
 
     st.subheader("General information")
@@ -157,21 +170,21 @@ if selected != '':
         
         df_monthly_counts = queried.groupby(queried["date_of_event"].dt.month).size().reset_index(name="counts")
         df_monthly_counts["month"] = pd.to_datetime(df_monthly_counts["date_of_event"], format="%m").dt.month_name().str.slice(stop=3)
-        fig2 = go.Figure()
-        fig2.add_trace(go.Bar(x=df_monthly_counts["month"], y=df_monthly_counts["counts"]))
-        fig2.update_layout(title='Distribution of Events per Month', xaxis={'tickmode': 'linear', 'dtick': 1})
-        st.plotly_chart(fig2)
+        fig5 = go.Figure()
+        fig5.add_trace(go.Bar(x=df_monthly_counts["month"], y=df_monthly_counts["counts"]))
+        fig5.update_layout(title='Distribution of Events per Month', xaxis={'tickmode': 'linear', 'dtick': 1})
+        st.plotly_chart(fig5)
 
     with col9:
 
         grouped_data = queried.groupby('event_type')['event_type'].count()
 
         # Create a bar chart
-        fig = go.Figure(data=[go.Bar(x=grouped_data.index, y=grouped_data.values)])
+        fig6 = go.Figure(data=[go.Bar(x=grouped_data.index, y=grouped_data.values)])
 
         # Set the chart title and axes labels
-        fig.update_layout(title='Distribution of Event Types', xaxis_title='Event Type', yaxis_title='Count')
-        st.plotly_chart(fig)
+        fig6.update_layout(title='Distribution of Event Types', xaxis_title='Event Type', yaxis_title='Count')
+        st.plotly_chart(fig6)
 
 
 
