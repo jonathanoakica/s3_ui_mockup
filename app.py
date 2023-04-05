@@ -129,16 +129,16 @@ if selected != '':
         fig1.update_layout(title='Distribution of Device Age at Event From Manufacure date', xaxis_title='Age of Device (Days)', yaxis_title='Count')
         st.plotly_chart(fig1)
 
-        if threshold != '':
-            queried_prod = event.query(f'product_code == "{product_code}"')
-            fig2 = px.histogram(queried_prod, x="days_from_release_to_failure")
 
-            # add a vertical line to highlight the chosen mdr_report_key
+        queried_prod = event.query(f'product_code == "{product_code}"')
+        fig2 = px.histogram(queried_prod, x="days_from_release_to_failure")
 
-            fig2.add_vline(x=days, 
-                        line_dash="dash", line_color="red")
-            fig2.update_layout(title='Comparisson with Devices with the same Product Code', xaxis_title='Age of Device (Days)', yaxis_title='Count')
-            st.plotly_chart(fig2)
+        # add a vertical line to highlight the chosen mdr_report_key
+
+        fig2.add_vline(x=days, 
+                    line_dash="dash", line_color="red")
+        fig2.update_layout(title='Comparisson with Devices with the same Product Code', xaxis_title='Age of Device (Days)', yaxis_title='Count')
+        st.plotly_chart(fig2)
 
 
     with col6:
@@ -152,16 +152,16 @@ if selected != '':
         st.plotly_chart(fig3)           
         
     # Create dataset for di_specific
-        if threshold != '':
-            queried_number = event.query(f'submission_number == "{submission_number}"')
-            fig4 = px.histogram(queried_number, x="days_from_release_to_failure")
 
-            # add a vertical line to highlight the chosen mdr_report_key
+        queried_number = event.query(f'submission_number == "{submission_number}"')
+        fig4 = px.histogram(queried_number, x="days_from_release_to_failure")
 
-            fig4.add_vline(x=days, 
-                        line_dash="dash", line_color="red")
-            fig4.update_layout(title='Comparisson with Devices with the same Submission Number', xaxis_title='Age of Device (Days)', yaxis_title='Count')
-            st.plotly_chart(fig4)
+        # add a vertical line to highlight the chosen mdr_report_key
+
+        fig4.add_vline(x=days, 
+                    line_dash="dash", line_color="red")
+        fig4.update_layout(title='Comparisson with Devices with the same Submission Number', xaxis_title='Age of Device (Days)', yaxis_title='Count')
+        st.plotly_chart(fig4)
 
 
     st.subheader("General information")
