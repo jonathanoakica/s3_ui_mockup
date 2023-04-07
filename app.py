@@ -22,7 +22,8 @@ failure = pd.read_csv('mock_failure_rate.csv')
 
 
 if selected != '':
-
+    st.header("Device Information")
+    st.write("________________________________________________________________________________")
 #---------------------Data preparations---------------------
     queried = event.query(f'udi_number == {selected}')
     queried.reset_index(drop=True, inplace=True)
@@ -81,6 +82,7 @@ if selected != '':
     #st.header("K Number: "+selected)
     col1, col2, col3 = st.columns((5,1,5))
 
+
     with col1:
         st.markdown(f'<p style=""><b>Brand: </b>{brand}</p>', unsafe_allow_html=True,)
         st.markdown(f'<p style=""><b>Manufacturer: </b>{manufacturer_name}</p>', unsafe_allow_html=True,)
@@ -97,6 +99,8 @@ if selected != '':
 
     surv = '%.2f%%' % (failure.at[days_from_implant_to_failure, 'KM_estimate']*100)
     #st.markdown(' ', unsafe_allow_html=True,)
+    st.header("Device Statistics")
+    st.write("________________________________________________________________________________")
     st.subheader("Survivalship rate: "+surv)
     days = queried['days_from_release_to_failure'][0]
     col1a, col2a, col3a = st.columns((5,1,5))
@@ -120,7 +124,6 @@ if selected != '':
     #st.subheader("Age of the Device at Event: "+str(days)+" days")
    
     col4, col5, col6 = st.columns((5,1,5))
-    
 
     with col4:
         fig1 = px.histogram(queried, x="days_from_release_to_failure")
@@ -168,6 +171,7 @@ if selected != '':
 
 
     st.subheader("General information")
+    st.write("________________________________________________________________________________")
     col7, col8, col9 = st.columns((5,1,5))
     with col7:
         
