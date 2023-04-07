@@ -18,6 +18,7 @@ thresh.insert(0, '')
 selected = st.sidebar.selectbox('DI Number:', nums)
 threshold = st.sidebar.selectbox('Define a Threshold:', thresh)
 
+failure = pd.read_csv('mock_failure_rate.csv')
 
 
 if selected != '':
@@ -93,8 +94,10 @@ if selected != '':
         for i in range(len(res)):
             st.write(res2[i])
 
+
+    surv = '%.2f%%' % (failure.at[days_from_implant_to_failure, 'KM_estimate']*100)
     #st.markdown(' ', unsafe_allow_html=True,)
-    st.subheader("Submission Number: "+str(queried.submission_number[0]))
+    st.subheader("Survivalship rate: "+surv)
     days = queried['days_from_release_to_failure'][0]
     col1a, col2a, col3a = st.columns((5,1,5))
     with col1a:
