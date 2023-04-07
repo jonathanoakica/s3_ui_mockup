@@ -16,7 +16,7 @@ nums.insert(0, '')
 thresh = [i for i in range (5,100,5)]
 thresh.insert(0, '')
 selected = st.sidebar.selectbox('DI Number:', nums)
-threshold = st.sidebar.selectbox('Define a Threshold:', thresh)
+#threshold = st.sidebar.selectbox('Define a Threshold:', thresh)
 
 failure = pd.read_csv('mock_failure_rate.csv')
 
@@ -54,7 +54,7 @@ if selected != '':
             else:
                 terms_dict[i] += 1
 
-    res = dict(sorted(terms_dict.items(), key = lambda x: x[1], reverse = True)[:5])
+    res = dict(sorted(terms_dict.items(), key = lambda x: x[1], reverse = True)[:3])
     res2 = []
 
     for i in res:
@@ -88,8 +88,6 @@ if selected != '':
         st.markdown(f'<p style=""><b>Manufacturer: </b>{manufacturer_name}</p>', unsafe_allow_html=True,)
         st.markdown(f'<p style=""><b>Generic Name: </b>{generic_name}</p>', unsafe_allow_html=True,)
         st.markdown(f'<p style=""><b>Product Code: </b>{product_code}</p>', unsafe_allow_html=True,)
-        st.markdown(f'<p style=""><b>Products In_use (Mock): </b>{in_use_f}</p>', unsafe_allow_html=True,)
-        st.markdown(f'<p style=""><b>Products Failed: </b>{failed_f}</p>', unsafe_allow_html=True,)
 
     with col3:
         st.markdown(f'<p style=""><b>Common Problems: </b></p>', unsafe_allow_html=True,)
@@ -107,11 +105,9 @@ if selected != '':
     with col1a:
         st.markdown(f'<p ><b>Age of Device at Event From First Use (Mock):</b> <span style="color: blue;"><b>{days_from_implant_to_failure}<b></span></p>', unsafe_allow_html=True)
         st.markdown(f'<p><b>Age of Device at Event From Manufacture:</b> <span style="color: blue;"><b>{days}<b></span></p>', unsafe_allow_html=True)
-        if threshold != '':
-                if freq > threshold:
-                    st.markdown(f'<p style="font-size: 26px;"><b>Device Failure Percentage:</b> <span style="color: red;"><b>{frequency}<b></span></p>', unsafe_allow_html=True)
-                else:
-                    st.markdown(f'<p><b>Device Failure Percentage:</b> <span style="color: blue;"><b>{frequency}<b></span></p>', unsafe_allow_html=True)
+        st.markdown(f'<p><b>Device Failure Percentage:</b> <span style="color: blue;"><b>{frequency}<b></span></p>', unsafe_allow_html=True)
+        st.markdown(f'<p style=""><b>Products In_use (Mock): </b>{in_use_f}</p>', unsafe_allow_html=True,)
+        st.markdown(f'<p style=""><b>Products Failed: </b>{failed_f}</p>', unsafe_allow_html=True,)
     with col3a:
        
 
