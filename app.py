@@ -4,19 +4,21 @@ import statsmodels.api as sm
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from scipy.signal import savgol_filter
 
-st.set_page_config(page_title="UI Mockup - DI Numbers", layout='wide')
+st.set_page_config(page_title="UI Mockup - Premature Failure", layout='wide')
 
 event = pd.read_csv('event_with_mock.csv')
 
-st.sidebar.title('UI Mockup - DI Numbers')
+st.sidebar.title('UI Mockup - Premature Failure')
 
 nums = list(event['udi_number'].unique())
 nums.insert(0, '')
 thresh = [i for i in range (5,100,5)]
 thresh.insert(0, '')
 selected = st.sidebar.selectbox('DI Number:', nums)
-#threshold = st.sidebar.selectbox('Define a Threshold:', thresh)
+#threshold = st.sidebar.selectbox('Prematurity Threshold:', thresh)
+#st.sidebar.info('Prematurity is calculated: (100 - survivalship rate). The survivalship rate is the probability a device had to continue to function. If a device had 72% probability to continue to operate, its prematurity 28%. By defining a threshold of 30% ', icon="ℹ️")
 
 failure = pd.read_csv('mock_failure_rate.csv')
 
@@ -78,6 +80,18 @@ if selected != '':
     frequency = '%.0f%%' % (freq)
     submission_number = queried['submission_number'][0]
 
+    
+
+    # Assume your index and probability data are stored in a pandas DataFrame called "df"
+    # Smooth the probability data using a Savitzky-Golay filter
+    smooth_prob = savgol_filter(failure['KM_estimate'], window_length=51, polyorder=3)
+
+    # Calculate the second derivative of the smoothed probability data
+    second_deriv = np.gradient(np.gradient(smooth_prob))
+
+    # Find the index of the point where the second derivative is closest to zero
+    flat_index = np.argmin(np.abs(second_deriv))
+
     #st.dataframe(queried)
     #st.header("K Number: "+selected)
     col1, col2, col3 = st.columns((5,1,5))
@@ -95,11 +109,20 @@ if selected != '':
             st.write(res2[i])
 
 
-    surv = '%.2f%%' % (failure.at[days_from_implant_to_failure, 'KM_estimate']*100)
+    surv = '%.2f%%' % (failure.at[flat_index, 'KM_estimate']*100)
     #st.markdown(' ', unsafe_allow_html=True,)
     st.header("Device Statistics")
     st.write("________________________________________________________________________________")
-    st.subheader("Survivalship rate: "+surv)
+    st.info(f'The Survivalship Threshold for this device group is {"{:,}".format(flat_index)} days.')
+
+    #if threshold != '':
+   #prematurity =  round((failure.at[days_from_implant_to_failure, 'KM_estimate']*100), 2)
+    if days_from_implant_to_failure > flat_index:
+        st.success(f'This device did not produce an event prematurely', icon="✅")
+    else:
+        st.error(f'This device had an event prematurely.', icon="🚨")
+
+
     days = queried['days_from_release_to_failure'][0]
     col1a, col2a, col3a = st.columns((5,1,5))
     with col1a:
